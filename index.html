@@ -371,6 +371,12 @@
 
     <script src="config.js"></script>
     <script>
+        // URLを安全に構築するヘルパー関数
+        function buildApiUrl(endpoint) {
+            const baseURL = window.API_CONFIG.baseURL;
+            return baseURL + (endpoint.startsWith('/') ? endpoint : '/' + endpoint);
+        }
+
         class InterviewAI {
             constructor() {
                 this.recognition = null;
@@ -537,7 +543,7 @@
                 // 最終評価を取得
                 this.showLoading(true);
                 try {
-                    const response = await fetch(`${window.API_CONFIG.baseURL}/evaluate`, {
+                    const response = await fetch(buildApiUrl('/evaluate'), {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -690,7 +696,7 @@ ${evaluation.overall_feedback}
             async getQuickFeedback(answer) {
                 try {
                     this.showLoading(true);
-                    const response = await fetch(`${window.API_CONFIG.baseURL}/quick_feedback`, {
+                    const response = await fetch(buildApiUrl('/quick_feedback'), {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -722,7 +728,7 @@ ${evaluation.overall_feedback}
                 this.sendButton.disabled = true;
 
                 try {
-                    const response = await fetch(`${window.API_CONFIG.baseURL}/chat`, {
+                    const response = await fetch(buildApiUrl('/chat'), {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
