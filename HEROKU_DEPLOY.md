@@ -34,7 +34,7 @@ git init
 git add .
 git commit -m "Initial commit: 工業高校生向け面接対策AI"
 git branch -M main
-git remote add origin https://github.com/yourusername/interview-ai.git
+git remote add origin https://github.com/tbw0619/interview-ai.git
 git push -u origin main
 ```
 
