@@ -1,0 +1,41 @@
+{
+  "name": "工業高校生向け面接対策AI",
+  "description": "工業高校生の就職・進学面接練習をサポートするAIアプリケーション",
+  "repository": "https://github.com/yourusername/interview-ai",
+  "logo": "https://via.placeholder.com/120x120.png?text=面接AI",
+  "keywords": ["interview", "ai", "education", "fastapi", "openai"],
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "env": {
+    "OPENAI_API_KEY": {
+      "description": "OpenAI APIキー",
+      "required": true
+    },
+    "OPENAI_MODEL": {
+      "description": "使用するOpenAIモデル",
+      "value": "gpt-4o-mini",
+      "required": false
+    },
+    "DEBUG": {
+      "description": "デバッグモード",
+      "value": "False",
+      "required": false
+    },
+    "ALLOWED_ORIGINS": {
+      "description": "許可するオリジン（CORS設定）",
+      "value": "*",
+      "required": false
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
+  "addons": []
+}

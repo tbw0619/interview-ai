@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(export:*)",
+      "Bash(poetry init:*)",
+      "Bash(poetry install:*)",
+      "Bash(poetry run:*)",
+      "Bash(chmod:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

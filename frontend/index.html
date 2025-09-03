@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工業高校生向け面接対策AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 95%;
+            max-width: 1200px;
+            height: 95vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-title {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+            line-height: 1.2;
+        }
+
+        .header p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .mode-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mode-selector label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .mode-selector select {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.9);
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 18px 24px;
+            border-radius: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .message.user .message-bubble {
+            background: #007bff;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.ai .message-bubble {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .speak-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .speak-button:hover {
+            background: #0056b3;
+            transform: scale(1.1);
+        }
+
+        .speak-button.speaking {
+            background: #28a745;
+            animation: pulse 1s infinite;
+        }
+
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            background: white;
+        }
+
+        .voice-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mic-button {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: #dc3545;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .mic-button:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+
+        .mic-button.recording {
+            background: #28a745;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .status-text {
+            flex: 1;
+            font-size: 14px;
+            color: #666;
+            margin-left: 10px;
+        }
+
+        .transcript-area {
+            width: 100%;
+            min-height: 80px;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .transcript-area:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        .send-button {
+            width: 100%;
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .send-button:hover {
+            background: #0056b3;
+        }
+
+        .send-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .interview-controls {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .interview-start-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            width: 100%;
+        }
+
+        .interview-start-button:hover {
+            background: #218838;
+        }
+
+        .interview-start-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .question-progress {
+            background: #e9ecef;
+            border-radius: 20px;
+            height: 8px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .question-progress-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .question-number {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            
+            .header-title {
+                min-width: unset;
+            }
+            
+            .mode-selector {
+                justify-content: center;
+            }
+            
+            .container {
+                width: 98%;
+                height: 98vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-title">
+                <h1>🎓 工業高校生向け面接対策AI</h1>
+                <p>音声で話しかけて面接の練習をしよう！</p>
+            </div>
+            <div class="mode-selector">
+                <label for="modeSelect">面接モード：</label>
+                <select id="modeSelect">
+                    <option value="employment">就職面接</option>
+                    <option value="admission">進学面接</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="message ai">
+                <div class="message-bubble">
+                    こんにちは！面接対策を始めましょう。<br>
+                    マイクボタンを押して質問に答えてください。<br>
+                    まずは簡単な自己紹介からどうですか？
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            AI が回答を考えています...
+        </div>
+
+        <div class="input-area">
+            <div class="interview-controls" id="interviewControls">
+                <button class="interview-start-button" id="startInterviewButton">📋 模擬面接を開始する（7問）</button>
+            </div>
+            
+            <div class="voice-input">
+                <button class="mic-button" id="micButton">🎤</button>
+                <div class="status-text" id="statusText">マイクボタンを押して録音を開始</div>
+            </div>
+            
+            <textarea 
+                class="transcript-area" 
+                id="transcript" 
+                placeholder="ここに音声認識結果が表示されます。直接編集も可能です。"
+            ></textarea>
+            
+            <button class="send-button" id="sendButton">送信</button>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        class InterviewAI {
+            constructor() {
+                this.recognition = null;
+                this.synthesis = null;
+                this.currentAudio = null;
+                this.isRecording = false;
+                this.isSpeaking = false;
+                this.speechUpdateTimer = null;
+                this.lastUpdateTime = 0;
+                this.interviewState = {
+                    currentQuestion: 0,
+                    questions: [
+                        "志望した会社（または学校）を選んだ理由を具体的に教えてください。",
+                        "あなたの強みを1つ挙げて、それを示す具体的な経験を教えてください。",
+                        "チームやクラスで意見が分かれたとき、どのように行動しましたか？",
+                        "これまでに直面した一番大きな失敗と、それをどう乗り越えたかを教えてください。",
+                        "学校で学んだ専門知識や技術を、将来どのように活かしたいですか？",
+                        "働く（あるいは学ぶ）うえで大切にしたい価値観を教えてください。",
+                        "5年後、10年後にどのような人材になっていたいですか？"
+                    ],
+                    answers: [],
+                    isInterviewMode: false
+                };
+                
+                this.chatArea = document.getElementById('chatArea');
+                this.micButton = document.getElementById('micButton');
+                this.statusText = document.getElementById('statusText');
+                this.transcript = document.getElementById('transcript');
+                this.sendButton = document.getElementById('sendButton');
+                this.modeSelect = document.getElementById('modeSelect');
+                this.loading = document.getElementById('loading');
+                this.startInterviewButton = document.getElementById('startInterviewButton');
+                this.interviewControls = document.getElementById('interviewControls');
+
+                this.initSpeechRecognition();
+                this.initSpeechSynthesis();
+                this.bindEvents();
+            }
+
+            initSpeechSynthesis() {
+                if ('speechSynthesis' in window) {
+                    this.synthesis = window.speechSynthesis;
+                } else {
+                    console.log('このブラウザでは音声合成がサポートされていません');
+                }
+            }
+
+            initSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.lang = 'ja-JP';
+                    this.recognition.continuous = true;
+                    this.recognition.interimResults = true;
+
+                    this.recognition.onstart = () => {
+                        this.isRecording = true;
+                        this.micButton.classList.add('recording');
+                        this.statusText.textContent = '🔴 録音中... 話してください';
+                    };
+
+                    this.recognition.onresult = (event) => {
+                        let finalTranscript = '';
+                        let interimTranscript = '';
+
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const result = event.results[i];
+                            if (result.isFinal) {
+                                finalTranscript += result[0].transcript;
+                            } else {
+                                interimTranscript += result[0].transcript;
+                            }
+                        }
+
+                        const newText = finalTranscript + interimTranscript;
+                        this.updateTranscriptWithThrottle(newText);
+                    };
+
+                    this.recognition.onend = () => {
+                        this.isRecording = false;
+                        this.micButton.classList.remove('recording');
+                        this.statusText.textContent = '録音が終了しました';
+                    };
+
+                    this.recognition.onerror = (event) => {
+                        this.isRecording = false;
+                        this.micButton.classList.remove('recording');
+                        this.statusText.textContent = '音声認識エラー: ' + event.error;
+                    };
+                } else {
+                    this.statusText.textContent = 'このブラウザでは音声認識がサポートされていません';
+                    this.micButton.disabled = true;
+                }
+            }
+
+            bindEvents() {
+                this.micButton.addEventListener('click', () => {
+                    if (this.isRecording) {
+                        this.stopRecording();
+                    } else {
+                        this.startRecording();
+                    }
+                });
+
+                this.sendButton.addEventListener('click', () => {
+                    this.sendMessage();
+                });
+
+                this.startInterviewButton.addEventListener('click', () => {
+                    this.startInterview();
+                });
+
+                this.transcript.addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter' && event.ctrlKey) {
+                        this.sendMessage();
+                    }
+                });
+            }
+
+            startInterview() {
+                this.interviewState.isInterviewMode = true;
+                this.interviewState.currentQuestion = 0;
+                this.interviewState.answers = [];
+                
+                // 開始ボタンを非表示にして進捗バーを表示
+                this.interviewControls.innerHTML = `
+                    <div class="question-number">質問 1 / 7</div>
+                    <div class="question-progress">
+                        <div class="question-progress-bar" style="width: ${(1/7)*100}%"></div>
+                    </div>
+                `;
+                
+                // 最初の質問を表示
+                this.askNextQuestion();
+            }
+
+            askNextQuestion() {
+                if (this.interviewState.currentQuestion >= this.interviewState.questions.length) {
+                    this.finishInterview();
+                    return;
+                }
+
+                const questionNum = this.interviewState.currentQuestion + 1;
+                const question = this.interviewState.questions[this.interviewState.currentQuestion];
+                
+                const questionText = `【質問${questionNum}/7】\n${question}`;
+                
+                this.addMessage(questionText, 'ai');
+                
+                // 進捗バーを更新
+                const progress = (questionNum / 7) * 100;
+                const progressBar = document.querySelector('.question-progress-bar');
+                if (progressBar) {
+                    progressBar.style.width = `${progress}%`;
+                }
+                
+                const questionNumberDiv = document.querySelector('.question-number');
+                if (questionNumberDiv) {
+                    questionNumberDiv.textContent = `質問 ${questionNum} / 7`;
+                }
+            }
+
+            async finishInterview() {
+                // 最終評価を取得
+                this.showLoading(true);
+                try {
+                    const response = await fetch(`${window.API_CONFIG.baseURL}/evaluate`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            mode: this.modeSelect.value,
+                            answers: this.interviewState.answers
+                        })
+                    });
+
+                    if (response.ok) {
+                        const evaluation = await response.json();
+                        this.displayFinalEvaluation(evaluation);
+                    } else {
+                        throw new Error('評価取得に失敗しました');
+                    }
+                } catch (error) {
+                    console.error('Evaluation error:', error);
+                    this.addMessage('評価の取得中にエラーが発生しました。', 'ai');
+                } finally {
+                    this.showLoading(false);
+                    this.resetInterview();
+                }
+            }
+
+            displayFinalEvaluation(evaluation) {
+                const report = `
+🎯 【最終評価レポート】
+総合スコア: ${evaluation.summary_score}/5.0
+
+📊 質問別詳細評価:
+${evaluation.questions.map(q => `
+【質問${q.q}】スコア: ${q.score}/5.0
+📝 総評: ${q.feedback}
+🔍 詳細分析: ${q.detailed_analysis}
+💡 改善点: ${q.improvement_points.map(point => `• ${point}`).join('\n           ')}
+`).join('\n')}
+
+✨ あなたの強み:
+${evaluation.strengths.map(strength => `• ${strength}`).join('\n')}
+
+🎯 改善が必要な分野:
+${evaluation.areas_for_improvement.map(area => `• ${area}`).join('\n')}
+
+🚀 次のステップ:
+${evaluation.next_steps.map(step => `• ${step}`).join('\n')}
+
+💡 総合講評:
+${evaluation.overall_feedback}
+
+🎉 面接練習お疲れさまでした！継続的な練習で更なる成長を目指しましょう。
+`.trim();
+
+                this.addMessage(report, 'ai');
+            }
+
+            resetInterview() {
+                this.interviewState.isInterviewMode = false;
+                this.interviewState.currentQuestion = 0;
+                this.interviewState.answers = [];
+                
+                // 開始ボタンを復活
+                this.interviewControls.innerHTML = `
+                    <button class="interview-start-button" id="startInterviewButton">📋 模擬面接を開始する（7問）</button>
+                `;
+                
+                // イベントリスナーを再設定
+                document.getElementById('startInterviewButton').addEventListener('click', () => {
+                    this.startInterview();
+                });
+            }
+
+            startRecording() {
+                if (this.recognition) {
+                    this.transcript.value = '';
+                    this.recognition.start();
+                }
+            }
+
+            updateTranscriptWithThrottle(text) {
+                const now = Date.now();
+                
+                // 前回の更新から300ms以内の場合はタイマーを設定
+                if (now - this.lastUpdateTime < 300) {
+                    // 既存のタイマーをクリア
+                    if (this.speechUpdateTimer) {
+                        clearTimeout(this.speechUpdateTimer);
+                    }
+                    
+                    // 新しいタイマーを設定（300ms後に更新）
+                    this.speechUpdateTimer = setTimeout(() => {
+                        this.transcript.value = text;
+                        this.lastUpdateTime = Date.now();
+                    }, 300);
+                } else {
+                    // 300ms以上経過している場合は即座に更新
+                    this.transcript.value = text;
+                    this.lastUpdateTime = now;
+                }
+            }
+
+            stopRecording() {
+                if (this.recognition) {
+                    this.recognition.stop();
+                }
+                
+                // 音声認識停止時にタイマーもクリア
+                if (this.speechUpdateTimer) {
+                    clearTimeout(this.speechUpdateTimer);
+                    this.speechUpdateTimer = null;
+                }
+            }
+
+            async sendMessage() {
+                const message = this.transcript.value.trim();
+                if (!message) return;
+
+                // ユーザーメッセージを表示
+                this.addMessage(message, 'user');
+                
+                // 入力フィールドをクリア
+                this.transcript.value = '';
+
+                if (this.interviewState.isInterviewMode) {
+                    // 面接モード: 回答を保存して次の質問へ
+                    this.interviewState.answers.push({
+                        question: this.interviewState.questions[this.interviewState.currentQuestion],
+                        answer: message
+                    });
+                    
+                    this.interviewState.currentQuestion++;
+                    
+                    // 短いフィードバックを表示
+                    const feedback = await this.getQuickFeedback(message);
+                    if (feedback) {
+                        this.addMessage(feedback, 'ai');
+                    }
+                    
+                    // 次の質問へ進むか終了
+                    setTimeout(() => {
+                        this.askNextQuestion();
+                    }, 2000);
+                    
+                } else {
+                    // 通常のチャットモード
+                    await this.sendRegularChat(message);
+                }
+            }
+
+            async getQuickFeedback(answer) {
+                try {
+                    this.showLoading(true);
+                    const response = await fetch(`${window.API_CONFIG.baseURL}/quick_feedback`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            mode: this.modeSelect.value,
+                            question_num: this.interviewState.currentQuestion + 1,
+                            answer: answer
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        return data.feedback;
+                    }
+                } catch (error) {
+                    console.error('Quick feedback error:', error);
+                } finally {
+                    this.showLoading(false);
+                }
+                return "ありがとうございます。次の質問に進みますね。";
+            }
+
+            async sendRegularChat(message) {
+                const mode = this.modeSelect.value;
+                
+                // ローディング表示
+                this.showLoading(true);
+                this.sendButton.disabled = true;
+
+                try {
+                    const response = await fetch(`${window.API_CONFIG.baseURL}/chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            mode: mode,
+                            message: message
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    this.addMessage(data.reply, 'ai');
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    this.addMessage('申し訳ありません。エラーが発生しました。サーバーが起動していることを確認してください。', 'ai');
+                } finally {
+                    this.showLoading(false);
+                    this.sendButton.disabled = false;
+                }
+            }
+
+            addMessage(content, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                
+                const bubbleDiv = document.createElement('div');
+                bubbleDiv.className = 'message-bubble';
+                bubbleDiv.textContent = content;
+                
+                // AIメッセージの場合は音声再生ボタンを追加
+                if (sender === 'ai') {
+                    const speakButton = document.createElement('button');
+                    speakButton.className = 'speak-button';
+                    speakButton.innerHTML = '🔊';
+                    speakButton.title = '音声で読み上げ';
+                    speakButton.addEventListener('click', () => {
+                        this.speakText(content, speakButton);
+                    });
+                    bubbleDiv.appendChild(speakButton);
+                }
+                
+                messageDiv.appendChild(bubbleDiv);
+                this.chatArea.appendChild(messageDiv);
+                
+                // スクロールを最下部に移動
+                this.chatArea.scrollTop = this.chatArea.scrollHeight;
+            }
+
+            async speakText(text, button) {
+                // 現在の音声を停止
+                if (this.isSpeaking) {
+                    this.stopCurrentAudio();
+                    return;
+                }
+
+                // 他の音声ボタンを無効化
+                this.disableAllSpeakButtons();
+
+                try {
+                    this.isSpeaking = true;
+                    button.classList.add('speaking');
+                    button.innerHTML = '⏸️';
+
+                    // 読み上げ準備中の表示
+                    button.title = '音声生成中...';
+
+                    // VOICEVOXのずんだもん（speaker_id: 3）を使用
+                    await this.playVoicevoxAudio(text, 3);
+
+                } catch (error) {
+                    console.error('VOICEVOX音声生成エラー:', error);
+                    // フォールバック: ブラウザ標準音声合成
+                    button.title = 'フォールバック音声で再生中...';
+                    await this.fallbackToWebSpeechAsync(text);
+                } finally {
+                    this.isSpeaking = false;
+                    button.classList.remove('speaking');
+                    button.innerHTML = '🔊';
+                    button.title = '音声で読み上げ';
+                    this.enableAllSpeakButtons();
+                }
+            }
+
+            fallbackToWebSpeechAsync(text) {
+                return new Promise((resolve) => {
+                    if ('speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = 'ja-JP';
+                        utterance.rate = 0.85;    // より自然な速度
+                        utterance.pitch = 1.05;   // 少し高めで親しみやすく
+                        utterance.volume = 0.9;   // 音量を上げて聞きやすく
+                        
+                        // より自然な日本語音声を選択
+                        const voices = speechSynthesis.getVoices();
+                        const japaneseVoice = voices.find(voice => 
+                            voice.lang === 'ja-JP' || voice.lang.startsWith('ja')
+                        );
+                        
+                        if (japaneseVoice) {
+                            utterance.voice = japaneseVoice;
+                        }
+                        
+                        utterance.onend = () => resolve();
+                        utterance.onerror = () => resolve();
+                        
+                        speechSynthesis.speak(utterance);
+                    } else {
+                        resolve();
+                    }
+                });
+            }
+
+            disableAllSpeakButtons() {
+                document.querySelectorAll('.speak-button').forEach(btn => {
+                    if (!btn.classList.contains('speaking')) {
+                        btn.disabled = true;
+                        btn.style.opacity = '0.5';
+                    }
+                });
+            }
+
+            enableAllSpeakButtons() {
+                document.querySelectorAll('.speak-button').forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                });
+            }
+
+            async playVoicevoxAudio(text, speakerId) {
+                // VOICEVOX が利用可能かチェック
+                if (!window.API_CONFIG.voicevoxURL) {
+                    throw new Error('VOICEVOX not available in production');
+                }
+                
+                // 1. 音声クエリを作成
+                const queryResponse = await fetch(`${window.API_CONFIG.voicevoxURL}/audio_query?text=${encodeURIComponent(text)}&speaker=${speakerId}`, {
+                    method: 'POST'
+                });
+                
+                if (!queryResponse.ok) {
+                    throw new Error('VOICEVOX audio_query failed');
+                }
+                
+                const audioQuery = await queryResponse.json();
+                
+                // 音声パラメータを調整（より滑らかに）
+                audioQuery.speedScale = 0.9;        // 少しゆっくり（1.0が標準）
+                audioQuery.pitchScale = 0.05;       // ピッチの変動を少なく
+                audioQuery.intonationScale = 1.1;   // イントネーションを少し強調
+                audioQuery.volumeScale = 0.8;       // 音量を少し下げる
+                audioQuery.prePhonemeLength = 0.1;  // 発音前の間を短く
+                audioQuery.postPhonemeLength = 0.1; // 発音後の間を短く
+                
+                // 2. 音声合成
+                const synthesisResponse = await fetch(`${window.API_CONFIG.voicevoxURL}/synthesis?speaker=${speakerId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(audioQuery)
+                });
+                
+                if (!synthesisResponse.ok) {
+                    throw new Error('VOICEVOX synthesis failed');
+                }
+                
+                // 3. 音声データを再生
+                const audioBlob = await synthesisResponse.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                
+                return new Promise((resolve, reject) => {
+                    const audio = new Audio(audioUrl);
+                    this.currentAudio = audio;
+                    
+                    // 音声再生の品質向上
+                    audio.preload = 'auto';
+                    audio.volume = 0.9;
+                    
+                    audio.oncanplaythrough = () => {
+                        // 音声データが完全にロードされてから再生
+                        audio.play().catch(reject);
+                    };
+                    
+                    audio.onended = () => {
+                        URL.revokeObjectURL(audioUrl);
+                        this.currentAudio = null;
+                        resolve();
+                    };
+                    
+                    audio.onerror = () => {
+                        URL.revokeObjectURL(audioUrl);
+                        this.currentAudio = null;
+                        reject(new Error('Audio playback failed'));
+                    };
+                    
+                    // 音声データのロード開始
+                    audio.load();
+                });
+            }
+
+            fallbackToWebSpeech(text) {
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'ja-JP';
+                    utterance.rate = 0.85;    // より自然な速度
+                    utterance.pitch = 1.05;   // 少し高めで親しみやすく
+                    utterance.volume = 0.9;   // 音量を上げて聞きやすく
+                    
+                    // より自然な日本語音声を選択
+                    const voices = speechSynthesis.getVoices();
+                    const japaneseVoice = voices.find(voice => 
+                        voice.lang === 'ja-JP' || voice.lang.startsWith('ja')
+                    );
+                    
+                    if (japaneseVoice) {
+                        utterance.voice = japaneseVoice;
+                    }
+                    
+                    speechSynthesis.speak(utterance);
+                }
+            }
+
+            stopCurrentAudio() {
+                // 現在の音声を強制停止
+                if (this.currentAudio) {
+                    this.currentAudio.pause();
+                    this.currentAudio.currentTime = 0;
+                    this.currentAudio.src = '';
+                    this.currentAudio = null;
+                }
+                
+                // ブラウザ音声合成も停止
+                if ('speechSynthesis' in window) {
+                    speechSynthesis.cancel();
+                }
+                
+                // 状態をリセット
+                this.isSpeaking = false;
+                
+                // すべての音声ボタンをリセット
+                document.querySelectorAll('.speak-button').forEach(btn => {
+                    btn.classList.remove('speaking');
+                    btn.innerHTML = '🔊';
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                });
+            }
+
+            showLoading(show) {
+                this.loading.style.display = show ? 'block' : 'none';
+            }
+        }
+
+        // アプリケーション初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            new InterviewAI();
+        });
+    </script>
+</body>
+</html>
