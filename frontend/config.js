@@ -2,7 +2,7 @@
 const API_CONFIG = {
     // 本番環境（GitHub Pages）
     production: {
-        baseURL: 'https://your-interview-ai-b4c3ddb35a9f.herokuapp.com/',
+        baseURL: 'https://your-interview-ai-b4c3ddb35a9f.herokuapp.com',
         voicevoxURL: null // VOICEVOX機能は本番環境では無効
     },
     // 開発環境
