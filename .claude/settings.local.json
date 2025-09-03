@@ -5,7 +5,9 @@
       "Bash(poetry init:*)",
       "Bash(poetry install:*)",
       "Bash(poetry run:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
